@@ -4,406 +4,348 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Propiedad — Asesora Inmobiliaria Morelia</title>
-
-  <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- Leaflet (mapa gratuito) -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <!-- Estilos -->
   <link rel="stylesheet" href="css/main.css" />
-
   <style>
-    .detail-hero {
-      padding-top: 72px;
-      background: var(--green-deep);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
+    body { background: #F7F3EE; }
+    .nav-detail {
+      position:fixed;top:0;left:0;right:0;z-index:100;height:64px;
+      background:rgba(27,67,50,0.97);backdrop-filter:blur(12px);
+      display:flex;align-items:center;justify-content:space-between;padding:0 40px;
+      box-shadow:0 2px 20px rgba(0,0,0,0.15);
     }
-    /* Gallery */
-    .gallery-main {
-      position: relative;
-      flex: 1;
-      max-height: 65vh;
-      overflow: hidden;
-      background: #000;
-    }
-    .gallery-main img {
-      width: 100%; height: 100%;
-      object-fit: cover;
-      transition: opacity 0.4s ease;
-    }
-    .gallery-main-placeholder {
-      width: 100%; height: 100%;
-      min-height: 300px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 5rem;
-      background: linear-gradient(135deg, var(--green-deep), var(--green-mid));
-    }
-    .gallery-arrow {
-      position: absolute;
-      top: 50%; transform: translateY(-50%);
-      width: 48px; height: 48px;
-      background: rgba(27,67,50,0.7);
-      backdrop-filter: blur(8px);
-      border-radius: 50%;
-      border: none;
-      color: white;
-      font-size: 1.2rem;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer;
-      transition: all var(--transition);
-      z-index: 5;
-    }
-    .gallery-arrow:hover { background: var(--green-deep); transform: translateY(-50%) scale(1.1); }
-    .gallery-arrow.left  { left: 16px; }
-    .gallery-arrow.right { right: 16px; }
-    .gallery-counter {
-      position: absolute;
-      bottom: 16px; right: 16px;
-      background: rgba(0,0,0,0.5);
-      color: white;
-      padding: 5px 12px;
-      border-radius: 50px;
-      font-size: 0.8rem;
-      backdrop-filter: blur(4px);
-    }
-    .gallery-thumbs {
-      display: flex;
-      gap: 8px;
-      padding: 12px 24px;
-      background: var(--green-deep);
-      overflow-x: auto;
-    }
-    .gallery-thumb {
-      width: 72px; height: 52px;
-      border-radius: 8px;
-      overflow: hidden;
-      flex-shrink: 0;
-      cursor: pointer;
-      border: 2px solid transparent;
-      transition: border-color var(--transition);
-    }
-    .gallery-thumb.active { border-color: var(--gold); }
-    .gallery-thumb img { width: 100%; height: 100%; object-fit: cover; }
-
-    /* Detail body */
-    .detail-body {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 60px 48px;
-      display: grid;
-      grid-template-columns: 1fr 340px;
-      gap: 48px;
-      align-items: start;
-    }
-    .detail-breadcrumb {
-      font-size: 0.8rem;
-      color: var(--gray);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      margin-bottom: 20px;
-    }
-    .detail-breadcrumb a { color: var(--green-mid); }
-    .detail-status-row {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 12px;
-    }
-    .detail-colonia {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: var(--green-pale);
-      color: var(--green-deep);
-      padding: 5px 14px;
-      border-radius: 50px;
-      font-size: 0.78rem;
-      font-weight: 500;
-    }
-    .detail-title {
-      font-family: var(--font-display);
-      font-size: clamp(1.8rem, 4vw, 2.8rem);
-      font-weight: 400;
-      color: var(--green-deep);
-      line-height: 1.2;
-      margin-bottom: 12px;
-    }
-    .detail-address {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      color: var(--gray);
-      font-size: 0.9rem;
-      margin-bottom: 28px;
-    }
-    .detail-features {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 16px;
-      padding: 24px;
-      background: var(--white);
-      border-radius: var(--radius-lg);
-      margin-bottom: 28px;
-      border: 1px solid var(--cream-dark);
-    }
-    .detail-feature {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-      min-width: 80px;
-      flex: 1;
-    }
-    .detail-feature-icon { font-size: 1.6rem; }
-    .detail-feature-value {
-      font-family: var(--font-display);
-      font-size: 1.2rem;
-      font-weight: 700;
-      color: var(--green-deep);
-    }
-    .detail-feature-label { font-size: 0.7rem; color: var(--gray); text-transform: uppercase; letter-spacing: 0.08em; }
-    
-    .detail-description {
-      font-size: 1rem;
-      color: var(--charcoal);
-      line-height: 1.8;
-      margin-bottom: 32px;
-    }
-    .detail-section-title {
-      font-family: var(--font-display);
-      font-size: 1.4rem;
-      color: var(--green-deep);
-      margin-bottom: 16px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .detail-badges {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 32px;
-    }
-    .detail-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 8px 16px;
-      border-radius: 50px;
-      font-size: 0.82rem;
-      font-weight: 500;
-    }
-    .badge-credit { background: #D1FAE5; color: #065F46; }
-    .badge-legal  { background: #FEE2E2; color: #991B1B; }
-    .badge-nolegal { background: #D1FAE5; color: #065F46; }
-    
-    /* Video */
-    .video-wrapper {
-      position: relative;
-      padding-bottom: 56.25%;
-      height: 0;
-      border-radius: var(--radius-lg);
-      overflow: hidden;
-      margin-bottom: 32px;
-      background: var(--charcoal);
-    }
-    .video-wrapper iframe {
-      position: absolute; top: 0; left: 0;
-      width: 100%; height: 100%;
-    }
-
-    /* Map */
-    #propertyMap {
-      height: 300px;
-      border-radius: var(--radius-lg);
-      overflow: hidden;
-      margin-bottom: 32px;
-    }
-
+    .nav-detail-logo{font-family:'Cormorant Garamond',Georgia,serif;color:#fff;font-size:1.2rem;line-height:1}
+    .nav-detail-sub{font-size:0.6rem;color:#E8D5A3;letter-spacing:0.15em;text-transform:uppercase}
+    .nav-back{display:inline-flex;align-items:center;gap:8px;color:rgba(255,255,255,0.8);font-size:0.82rem;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);padding:8px 18px;border-radius:50px;transition:all 0.25s}
+    .nav-back:hover{background:rgba(255,255,255,0.2);color:#fff}
+    .loading-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;background:linear-gradient(135deg,#1B4332,#2D6A4F)}
+    .spinner{width:44px;height:44px;border:3px solid rgba(255,255,255,0.15);border-top-color:#C9A84C;border-radius:50%;animation:spin 0.8s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .detail-wrapper{max-width:1200px;margin:0 auto;padding:88px 32px 60px}
+    .breadcrumb{display:flex;align-items:center;gap:8px;font-size:0.78rem;color:#6B7280;margin-bottom:20px}
+    .breadcrumb a{color:#2D6A4F}
+    .detail-top{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;flex-wrap:wrap;margin-bottom:24px}
+    .detail-badges-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+    .badge-tipo{font-size:0.7rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;background:#D8F3DC;color:#1B4332;padding:4px 12px;border-radius:50px}
+    .badge-colonia{font-size:0.7rem;font-weight:500;background:#EDE8E0;color:#6B7280;padding:4px 12px;border-radius:50px;display:flex;align-items:center;gap:4px}
+    .detail-title{font-family:'Cormorant Garamond',Georgia,serif;font-size:clamp(1.6rem,3vw,2.4rem);font-weight:600;color:#1B4332;line-height:1.2;margin-bottom:8px}
+    .detail-address{font-size:0.875rem;color:#6B7280;display:flex;align-items:center;gap:6px}
+    .detail-top-right{text-align:right}
+    .detail-price{font-family:'Cormorant Garamond',Georgia,serif;font-size:2.2rem;font-weight:700;color:#1B4332;line-height:1;margin-bottom:4px}
+    .detail-price-note{font-size:0.78rem;color:#6B7280}
+    /* Photo Grid */
+    .photo-grid{display:grid;grid-template-columns:1.6fr 1fr;grid-template-rows:280px 200px;gap:8px;border-radius:20px;overflow:hidden;margin-bottom:32px;background:#1B4332}
+    .photo-main{grid-row:1/3;position:relative;overflow:hidden;cursor:pointer}
+    .photo-main img,.photo-secondary img{width:100%;height:100%;object-fit:cover;transition:transform 0.5s}
+    .photo-main:hover img,.photo-secondary:hover img{transform:scale(1.04)}
+    .photo-secondary{position:relative;overflow:hidden;cursor:pointer}
+    .photo-placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:3rem;background:linear-gradient(135deg,#2D6A4F,#1B4332)}
+    .photo-count-btn{position:absolute;bottom:16px;right:16px;background:rgba(0,0,0,0.65);backdrop-filter:blur(8px);color:#fff;font-size:0.78rem;font-weight:500;padding:8px 16px;border-radius:50px;border:none;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all 0.2s}
+    .photo-count-btn:hover{background:rgba(0,0,0,0.85)}
+    .status-overlay{position:absolute;top:16px;left:16px;padding:5px 14px;border-radius:50px;font-size:0.68rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase}
+    /* Lightbox */
+    .lightbox{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.93);display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px}
+    .lightbox.open{display:flex}
+    .lightbox-img{max-width:90vw;max-height:80vh;object-fit:contain;border-radius:8px}
+    .lightbox-close{position:absolute;top:20px;right:20px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;width:44px;height:44px;border-radius:50%;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center}
+    .lightbox-arrows{display:flex;gap:16px;align-items:center}
+    .lightbox-arrow{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;width:48px;height:48px;border-radius:50%;font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.2s}
+    .lightbox-arrow:hover{background:rgba(255,255,255,0.25)}
+    .lightbox-counter{color:rgba(255,255,255,0.6);font-size:0.85rem}
+    /* Content Grid */
+    .content-grid{display:grid;grid-template-columns:1fr 360px;gap:28px;align-items:start}
+    .info-card{background:#fff;border-radius:20px;border:1px solid #EDE8E0;padding:28px;margin-bottom:20px}
+    .card-title{font-family:'Cormorant Garamond',Georgia,serif;font-size:1.2rem;font-weight:600;color:#1B4332;margin-bottom:20px;display:flex;align-items:center;gap:8px;padding-bottom:14px;border-bottom:1px solid #F7F3EE}
+    .features-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+    .feature-item{text-align:center;padding:16px 8px;background:#F7F3EE;border-radius:14px}
+    .feature-icon{font-size:1.6rem;margin-bottom:6px}
+    .feature-value{font-family:'Cormorant Garamond',Georgia,serif;font-size:1.3rem;font-weight:700;color:#1B4332;line-height:1}
+    .feature-label{font-size:0.68rem;color:#6B7280;text-transform:uppercase;letter-spacing:0.08em;margin-top:3px}
+    .tags-row{display:flex;flex-wrap:wrap;gap:10px}
+    .tag{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:50px;font-size:0.82rem;font-weight:500}
+    .tag-green{background:#D1FAE5;color:#065F46}
+    .tag-red{background:#FEE2E2;color:#991B1B}
+    .tag-blue{background:#DBEAFE;color:#1E40AF}
+    .tag-yellow{background:#FEF3C7;color:#92400E}
+    .description-text{font-size:0.95rem;color:#374151;line-height:1.85}
+    #propertyMap{height:280px;border-radius:14px;overflow:hidden}
+    .video-frame{position:relative;padding-bottom:56.25%;height:0;border-radius:14px;overflow:hidden;background:#1B4332}
+    .video-frame iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:0}
     /* Sidebar */
-    .detail-sidebar {
-      position: sticky;
-      top: 92px;
+    .sidebar{position:sticky;top:84px}
+    .price-card{background:linear-gradient(135deg,#1B4332,#2D6A4F);border-radius:20px;padding:28px;margin-bottom:16px;position:relative;overflow:hidden}
+    .price-card::before{content:'';position:absolute;top:-40px;right:-40px;width:160px;height:160px;background:radial-gradient(circle,rgba(201,168,76,0.15),transparent 70%)}
+    .price-card-label{font-size:0.7rem;color:rgba(255,255,255,0.6);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:6px}
+    .price-card-amount{font-family:'Cormorant Garamond',Georgia,serif;font-size:2rem;font-weight:700;color:#fff;line-height:1;margin-bottom:4px}
+    .price-card-note{font-size:0.78rem;color:rgba(255,255,255,0.6);margin-bottom:24px}
+    .btn-wa-big{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:15px;border-radius:14px;background:#25D366;color:#fff;font-size:0.95rem;font-weight:600;border:none;cursor:pointer;transition:all 0.25s;margin-bottom:10px;text-decoration:none}
+    .btn-wa-big:hover{background:#20BD5A;transform:translateY(-2px);box-shadow:0 8px 24px rgba(37,211,102,0.4)}
+    .btn-catalog{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px;border-radius:14px;background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.85);font-size:0.85rem;font-weight:500;border:1px solid rgba(255,255,255,0.2);cursor:pointer;transition:all 0.25s;text-decoration:none}
+    .btn-catalog:hover{background:rgba(255,255,255,0.2)}
+    .details-card{background:#fff;border-radius:20px;border:1px solid #EDE8E0;padding:24px;margin-bottom:16px}
+    .details-card-title{font-size:0.68rem;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:#C9A84C;margin-bottom:16px}
+    .detail-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #F7F3EE;font-size:0.875rem}
+    .detail-row:last-child{border:none}
+    .detail-row-label{color:#6B7280}
+    .detail-row-value{font-weight:500;color:#1B4332}
+    .agent-mini-card{background:#fff;border-radius:20px;border:1px solid #EDE8E0;padding:24px}
+    .agent-mini-photo{width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#1B4332,#2D6A4F);display:flex;align-items:center;justify-content:center;font-size:1.6rem;margin-bottom:12px}
+    .agent-mini-name{font-family:'Cormorant Garamond',Georgia,serif;font-size:1.1rem;font-weight:600;color:#1B4332;margin-bottom:2px}
+    .agent-mini-title{font-size:0.75rem;color:#6B7280;margin-bottom:16px}
+    .agent-mini-features{display:flex;flex-direction:column;gap:8px}
+    .agent-mini-feat{display:flex;align-items:center;gap:8px;font-size:0.82rem;color:#374151}
+    .fab-wa{position:fixed;bottom:28px;right:28px;z-index:200;width:56px;height:56px;border-radius:50%;background:#25D366;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(37,211,102,0.5);animation:fabpulse 3s infinite;text-decoration:none}
+    @keyframes fabpulse{0%,100%{box-shadow:0 4px 20px rgba(37,211,102,0.5)}50%{box-shadow:0 4px 28px rgba(37,211,102,0.8),0 0 0 6px rgba(37,211,102,0.1)}}
+    @media(max-width:900px){
+      .content-grid{grid-template-columns:1fr}.sidebar{position:static}
+      .photo-grid{grid-template-columns:1fr;grid-template-rows:260px 160px 160px}.photo-main{grid-row:auto}
+      .features-row{grid-template-columns:repeat(2,1fr)}.detail-wrapper{padding:80px 16px 40px}.nav-detail{padding:0 16px}
     }
-    .sidebar-card {
-      background: var(--white);
-      border-radius: var(--radius-lg);
-      padding: 28px;
-      border: 1px solid var(--cream-dark);
-      box-shadow: var(--shadow-md);
-      margin-bottom: 16px;
-    }
-    .sidebar-price {
-      font-family: var(--font-display);
-      font-size: 2rem;
-      font-weight: 700;
-      color: var(--green-deep);
-      margin-bottom: 4px;
-    }
-    .sidebar-price-note {
-      font-size: 0.78rem;
-      color: var(--gray);
-      margin-bottom: 20px;
-    }
-    .sidebar-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      width: 100%;
-      padding: 16px;
-      border-radius: var(--radius);
-      font-size: 0.95rem;
-      font-weight: 600;
-      margin-bottom: 10px;
-      transition: all var(--transition);
-    }
-    .sidebar-btn-whatsapp {
-      background: #25D366;
-      color: white;
-    }
-    .sidebar-btn-whatsapp:hover { background: #20BD5A; transform: translateY(-2px); }
-    .sidebar-btn-secondary {
-      background: var(--cream);
-      color: var(--green-deep);
-      border: 1.5px solid var(--cream-dark);
-    }
-    .sidebar-btn-secondary:hover { background: var(--green-pale); }
-    .sidebar-info-list { display: flex; flex-direction: column; gap: 10px; }
-    .sidebar-info-item {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.85rem;
-      padding: 8px 0;
-      border-bottom: 1px solid var(--cream-dark);
-    }
-    .sidebar-info-item:last-child { border: none; }
-    .sidebar-info-label { color: var(--gray); }
-    .sidebar-info-value { font-weight: 500; color: var(--green-deep); }
-
-    /* Loading */
-    .detail-loading {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 60vh;
-      color: var(--white);
-      gap: 16px;
-    }
-    .detail-loading-spinner {
-      width: 40px; height: 40px;
-      border: 3px solid rgba(255,255,255,0.2);
-      border-top-color: var(--gold);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    @media (max-width: 860px) {
-      .detail-body { grid-template-columns: 1fr; padding: 32px 24px; }
-      .detail-sidebar { position: static; }
-    }
+    @media(max-width:480px){.detail-top{flex-direction:column}.detail-top-right{text-align:left}}
   </style>
 </head>
 <body>
-
-  <!-- Navbar -->
-  <nav class="navbar scrolled" style="position:fixed;">
-    <a href="index.html" class="nav-logo">
-      <span class="nav-logo-name">Patricia González</span>
-      <span class="nav-logo-tagline">Asesora Inmobiliaria · Morelia</span>
-    </a>
-    <ul class="nav-links">
-      <li><a href="index.html#catalogo">← Regresar al catálogo</a></li>
-    </ul>
+  <nav class="nav-detail">
+    <div>
+      <div class="nav-detail-logo" id="navName">Patricia González</div>
+      <div class="nav-detail-sub">Asesora Inmobiliaria · Morelia</div>
+    </div>
+    <a href="index.html#catalogo" class="nav-back">← Regresar al catálogo</a>
   </nav>
 
-  <!-- Hero con galería -->
-  <div class="detail-hero" id="detailHero">
-    <div class="detail-loading" id="detailLoading">
-      <div class="detail-loading-spinner"></div>
-      <p>Cargando propiedad...</p>
-    </div>
+  <div class="loading-screen" id="loadingScreen">
+    <div class="spinner"></div>
+    <p style="color:rgba(255,255,255,0.6);font-size:0.875rem;">Cargando propiedad...</p>
   </div>
 
-  <!-- Cuerpo del detalle -->
-  <div id="detailBody" style="display:none;">
-    <div class="detail-body">
+  <div class="detail-wrapper" id="mainContent" style="display:none;">
+    <div class="breadcrumb">
+      <a href="index.html">Inicio</a> <span>/</span>
+      <a href="index.html#catalogo">Propiedades</a> <span>/</span>
+      <span id="bcColonia">—</span>
+    </div>
 
-      <!-- Columna principal -->
-      <div class="detail-main">
-        <div class="detail-breadcrumb">
-          <a href="index.html">Inicio</a> / <a href="index.html#catalogo">Propiedades</a> / <span id="dColonia">—</span>
-        </div>
-        <div class="detail-status-row">
+    <div class="detail-top">
+      <div class="detail-top-left">
+        <div class="detail-badges-row">
+          <span class="badge-tipo" id="dTipo">Casa</span>
+          <span class="badge-colonia">📍 <span id="dColoniaBadge">—</span></span>
           <span class="card-status" id="dStatus"></span>
-          <span class="detail-colonia">📍 <span id="dColoniaTag"></span></span>
         </div>
         <h1 class="detail-title" id="dTitle">—</h1>
         <div class="detail-address" id="dAddress"></div>
+      </div>
+      <div class="detail-top-right">
+        <div class="detail-price" id="dPrice">—</div>
+        <div class="detail-price-note" id="dPriceNote"></div>
+      </div>
+    </div>
 
-        <!-- Features -->
-        <div class="detail-features" id="dFeatures"></div>
+    <div class="photo-grid" id="photoGrid">
+      <div class="photo-main"><div class="photo-placeholder">🏡</div></div>
+    </div>
 
-        <!-- Badges info -->
-        <div class="detail-badges" id="dBadges"></div>
+    <div class="lightbox" id="lightbox">
+      <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+      <img class="lightbox-img" id="lightboxImg" src="" alt=""/>
+      <div class="lightbox-arrows">
+        <button class="lightbox-arrow" onclick="lbPrev()">‹</button>
+        <span class="lightbox-counter" id="lbCounter">1/1</span>
+        <button class="lightbox-arrow" onclick="lbNext()">›</button>
+      </div>
+    </div>
 
-        <!-- Descripción -->
-        <div id="dDescSection">
-          <div class="detail-section-title">📝 Descripción</div>
-          <p class="detail-description" id="dDescription"></p>
+    <div class="content-grid">
+      <div>
+        <div class="info-card" id="featuresCard" style="display:none;">
+          <div class="card-title">🏠 Características</div>
+          <div class="features-row" id="featuresRow"></div>
         </div>
-
-        <!-- Video -->
-        <div id="dVideoSection" style="display:none;">
-          <div class="detail-section-title">🎥 Video de la Propiedad</div>
-          <div class="video-wrapper">
-            <iframe id="dVideo" frameborder="0" allowfullscreen
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture">
-            </iframe>
-          </div>
+        <div class="info-card">
+          <div class="card-title">✅ Información Clave</div>
+          <div class="tags-row" id="tagsRow"></div>
         </div>
-
-        <!-- Mapa -->
-        <div id="dMapSection" style="display:none;">
-          <div class="detail-section-title">🗺️ Ubicación</div>
+        <div class="info-card" id="descCard" style="display:none;">
+          <div class="card-title">📝 Descripción</div>
+          <p class="description-text" id="dDescription"></p>
+        </div>
+        <div class="info-card" id="mapCard" style="display:none;">
+          <div class="card-title">🗺️ Ubicación</div>
           <div id="propertyMap"></div>
+        </div>
+        <div class="info-card" id="videoCard" style="display:none;">
+          <div class="card-title">🎥 Video de la Propiedad</div>
+          <div class="video-frame"><iframe id="dVideo" allowfullscreen allow="autoplay; encrypted-media"></iframe></div>
         </div>
       </div>
 
-      <!-- Sidebar -->
-      <div class="detail-sidebar">
-        <div class="sidebar-card">
-          <div class="sidebar-price" id="sPrice">—</div>
-          <div class="sidebar-price-note" id="sPriceNote"></div>
-          <a class="sidebar-btn sidebar-btn-whatsapp" id="sWhatsapp" href="#">
+      <div class="sidebar">
+        <div class="price-card">
+          <div class="price-card-label">Precio de venta</div>
+          <div class="price-card-amount" id="sPriceAmount">—</div>
+          <div class="price-card-note" id="sPriceNote"></div>
+          <a class="btn-wa-big" id="sWhatsapp" href="#">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
             Preguntar por WhatsApp
           </a>
-          <a href="index.html#catalogo" class="sidebar-btn sidebar-btn-secondary">
-            ← Ver otras propiedades
-          </a>
+          <a href="index.html#catalogo" class="btn-catalog">← Ver otras propiedades</a>
         </div>
-
-        <div class="sidebar-card">
-          <div style="font-size:0.75rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold);margin-bottom:16px;">Detalles</div>
-          <div class="sidebar-info-list" id="sInfoList"></div>
+        <div class="details-card">
+          <div class="details-card-title">Detalles de la propiedad</div>
+          <div id="sDetailsList"></div>
+        </div>
+        <div class="agent-mini-card">
+          <div class="agent-mini-photo">👩‍💼</div>
+          <div class="agent-mini-name" id="agentMiniName">Patricia González</div>
+          <div class="agent-mini-title">Asesora Inmobiliaria Certificada</div>
+          <div class="agent-mini-features">
+            <div class="agent-mini-feat">📋 Verificación jurídica incluida</div>
+            <div class="agent-mini-feat">🏦 Orientación en créditos hipotecarios</div>
+            <div class="agent-mini-feat">📝 Acompañamiento hasta escrituras</div>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Floating WhatsApp -->
-  <a class="fab-whatsapp" id="fabWhatsapp" href="#">
-    <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+  <a class="fab-wa" id="fabWa" href="#">
+    <svg viewBox="0 0 24 24" width="28" height="28" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
   </a>
 
   <script src="js/config.js"></script>
-  <script src="js/property.js"></script>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const propertyId = params.get('id');
+    let images = [], lbIndex = 0, map = null;
+
+    document.getElementById('navName').textContent = AGENT_NAME;
+    document.getElementById('agentMiniName').textContent = AGENT_NAME;
+    document.getElementById('fabWa').href = getWhatsAppURL();
+
+    async function loadProperty() {
+      if (!propertyId) { showError('No se especificó ninguna propiedad.'); return; }
+      try {
+        const { data: p, error } = await sb
+          .from('properties').select('*, property_images(url, is_cover, order_index)')
+          .eq('id', propertyId).single();
+        if (error || !p) throw error || new Error('Not found');
+        render(p);
+      } catch(e) { showError('No se pudo cargar la propiedad.'); }
+    }
+
+    function render(p) {
+      document.title = `${p.title} — Inmobiliaria Morelia`;
+      images = (p.property_images||[]).sort((a,b)=>{if(a.is_cover)return -1;if(b.is_cover)return 1;return a.order_index-b.order_index});
+
+      document.getElementById('bcColonia').textContent = p.colonia||'';
+      document.getElementById('dTipo').textContent = propertyTypeLabel(p.property_type).replace(/^.*? /,'');
+      document.getElementById('dColoniaBadge').textContent = p.colonia||'';
+      const st = statusLabel(p.status);
+      const stEl = document.getElementById('dStatus');
+      stEl.textContent = st.text; stEl.className = `card-status ${st.class}`;
+      document.getElementById('dTitle').textContent = p.title;
+      if (p.address) document.getElementById('dAddress').innerHTML = `📍 ${p.address}, ${p.colonia}, Morelia, Mich.`;
+      document.getElementById('dPrice').textContent = formatPrice(p.price);
+      document.getElementById('sPriceAmount').textContent = formatPrice(p.price);
+      const note = p.has_credit ? '✅ Acepta crédito hipotecario' : 'Solo contado';
+      document.getElementById('dPriceNote').textContent = note;
+      document.getElementById('sPriceNote').textContent = note;
+      const wa = getWhatsAppURL('', p.title);
+      document.getElementById('sWhatsapp').href = wa;
+      document.getElementById('fabWa').href = wa;
+
+      buildPhotoGrid(p);
+
+      const feats = [];
+      if (p.bedrooms)  feats.push({icon:'🛏',value:p.bedrooms,label:'Recámaras'});
+      if (p.bathrooms) feats.push({icon:'🚿',value:p.bathrooms,label:'Baños'});
+      if (p.area_m2)   feats.push({icon:'📐',value:`${p.area_m2}m²`,label:'Superficie'});
+      if (feats.length) {
+        document.getElementById('featuresCard').style.display='block';
+        document.getElementById('featuresRow').innerHTML = feats.map(f=>`
+          <div class="feature-item"><div class="feature-icon">${f.icon}</div>
+          <div class="feature-value">${f.value}</div><div class="feature-label">${f.label}</div></div>`).join('');
+      }
+
+      const tags = [];
+      if (p.has_credit) tags.push(`<span class="tag tag-green">✅ Acepta crédito hipotecario</span>`);
+      else tags.push(`<span class="tag tag-yellow">💵 Solo contado</span>`);
+      tags.push(p.has_legal_issues
+        ? `<span class="tag tag-red">⚠️ Consultar situación jurídica</span>`
+        : `<span class="tag tag-green">✅ Sin problemas jurídicos</span>`);
+      tags.push(`<span class="tag tag-blue">📍 ${p.colonia}</span>`);
+      document.getElementById('tagsRow').innerHTML = tags.join('');
+
+      if (p.description) {
+        document.getElementById('descCard').style.display='block';
+        document.getElementById('dDescription').textContent = p.description;
+      }
+      if (p.latitude && p.longitude) {
+        document.getElementById('mapCard').style.display='block';
+        setTimeout(()=>initMap(p.latitude,p.longitude,p.title),400);
+      }
+      if (p.video_url) {
+        document.getElementById('videoCard').style.display='block';
+        document.getElementById('dVideo').src = convertVideo(p.video_url);
+      }
+
+      const rows = [
+        {label:'Colonia',value:p.colonia},
+        {label:'Tipo',value:propertyTypeLabel(p.property_type)},
+        {label:'Estado',value:st.text},
+        p.bedrooms  ? {label:'Recámaras',value:p.bedrooms}   : null,
+        p.bathrooms ? {label:'Baños',value:p.bathrooms}       : null,
+        p.area_m2   ? {label:'Superficie',value:`${p.area_m2} m²`} : null,
+      ].filter(Boolean);
+      document.getElementById('sDetailsList').innerHTML = rows.map(r=>`
+        <div class="detail-row"><span class="detail-row-label">${r.label}</span>
+        <span class="detail-row-value">${r.value}</span></div>`).join('');
+
+      document.getElementById('loadingScreen').style.display='none';
+      document.getElementById('mainContent').style.display='block';
+    }
+
+    function buildPhotoGrid(p) {
+      const grid = document.getElementById('photoGrid');
+      if (!images.length) { grid.innerHTML=`<div class="photo-main"><div class="photo-placeholder">${typeEmoji(p.property_type)}</div></div>`; return; }
+      const st = statusLabel(p.status);
+      let html = `<div class="photo-main" onclick="openLightbox(0)">
+        <img src="${images[0].url}" alt="${p.title}" loading="eager"/>
+        <span class="status-overlay ${st.class}">${st.text}</span>
+        ${images.length>1?`<button class="photo-count-btn" onclick="openLightbox(0)">📷 Ver todas (${images.length})</button>`:''}
+      </div>`;
+      if (images[1]) html+=`<div class="photo-secondary" onclick="openLightbox(1)"><img src="${images[1].url}" alt="foto 2" loading="lazy"/></div>`;
+      if (images[2]) html+=`<div class="photo-secondary" onclick="openLightbox(2)"><img src="${images[2].url}" alt="foto 3" loading="lazy"/></div>`;
+      grid.innerHTML = html;
+    }
+
+    function openLightbox(i){lbIndex=i;document.getElementById('lightbox').classList.add('open');updateLb()}
+    function closeLightbox(){document.getElementById('lightbox').classList.remove('open')}
+    function lbNext(){lbIndex=(lbIndex+1)%images.length;updateLb()}
+    function lbPrev(){lbIndex=(lbIndex-1+images.length)%images.length;updateLb()}
+    function updateLb(){document.getElementById('lightboxImg').src=images[lbIndex].url;document.getElementById('lbCounter').textContent=`${lbIndex+1}/${images.length}`}
+    document.addEventListener('keydown',e=>{if(e.key==='Escape')closeLightbox();if(e.key==='ArrowRight')lbNext();if(e.key==='ArrowLeft')lbPrev()});
+
+    function initMap(lat,lng,title){
+      if(map){map.remove();map=null}
+      map=L.map('propertyMap').setView([lat,lng],16);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>'}).addTo(map);
+      const icon=L.divIcon({html:`<div style="background:#1B4332;width:40px;height:40px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid #C9A84C;box-shadow:0 4px 12px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;"><div style="transform:rotate(45deg);font-size:14px;">🏠</div></div>`,className:'',iconSize:[40,40],iconAnchor:[20,40]});
+      L.marker([lat,lng],{icon}).addTo(map).bindPopup(`<strong>${title}</strong>`).openPopup();
+    }
+
+    function convertVideo(url){
+      const yt=url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|shorts\/))([a-zA-Z0-9_-]+)/);
+      if(yt)return `https://www.youtube.com/embed/${yt[1]}`;
+      if(url.includes('facebook.com'))return `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(url)}&show_text=false`;
+      return url;
+    }
+    function typeEmoji(t){return{casa:'🏠',departamento:'🏢',terreno:'🌿',local:'🏪',bodega:'🏭'}[t]||'🏡'}
+    function showError(msg){document.getElementById('loadingScreen').innerHTML=`<div style="text-align:center;color:rgba(255,255,255,0.8);"><div style="font-size:3rem;margin-bottom:16px;">😕</div><p>${msg}</p><a href="index.html" style="color:#E8D5A3;text-decoration:underline;margin-top:12px;display:inline-block;">← Regresar</a></div>`}
+
+    loadProperty();
+  </script>
 </body>
 </html>
