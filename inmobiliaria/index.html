@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Patricia González — Asesora Inmobiliaria | Morelia, Michoacán</title>
+  <meta name="description" content="Encuentra tu propiedad ideal en Morelia, Michoacán. Casas, departamentos y terrenos en las mejores colonias. Asesoría personalizada con Patricia González." />
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Estilos -->
+  <link rel="stylesheet" href="css/main.css" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Patricia González — Asesora Inmobiliaria Morelia" />
+  <meta property="og:description" content="Tu hogar ideal en Morelia te está esperando. Catálogo de propiedades en las mejores colonias." />
+  <meta property="og:type" content="website" />
+</head>
+<body>
+
+  <!-- ============================================================
+       NAVBAR
+  ============================================================ -->
+  <nav class="navbar" id="navbar">
+    <a href="index.html" class="nav-logo">
+      <span class="nav-logo-name" id="agentNameLogo">Patricia González</span>
+      <span class="nav-logo-tagline">Asesora Inmobiliaria · Morelia</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="#catalogo">Propiedades</a></li>
+      <li><a href="#asesora">Asesora</a></li>
+      <li><a href="#como-funciona">¿Cómo funciona?</a></li>
+      <li><a href="#contacto" class="nav-cta">Contactar</a></li>
+    </ul>
+    <button class="nav-hamburger" id="hamburger" aria-label="Menú">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <!-- ============================================================
+       HERO
+  ============================================================ -->
+  <section class="hero" id="inicio">
+    <div class="hero-bg"></div>
+    <div class="hero-pattern"></div>
+    <div class="hero-content">
+      <div class="hero-eyebrow">Morelia, Michoacán</div>
+      <h1 class="hero-title">
+        Encuentra tu<br><em>hogar ideal</em><br>en Morelia
+      </h1>
+      <p class="hero-subtitle">
+        Propiedades cuidadosamente seleccionadas en las mejores colonias. 
+        Con asesoría personalizada y acompañamiento en cada paso del proceso.
+      </p>
+      <div class="hero-actions">
+        <a href="#catalogo" class="btn-primary">
+          🏡 Ver Propiedades
+        </a>
+        <a id="heroWhatsapp" href="#" class="btn-secondary">
+          💬 Hablar con la Asesora
+        </a>
+      </div>
+    </div>
+    <div class="hero-stats" id="heroStats">
+      <div class="hero-stat">
+        <div class="hero-stat-number" id="statProperties">0</div>
+        <div class="hero-stat-label">Propiedades</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-number" id="statColonias">0</div>
+        <div class="hero-stat-label">Colonias</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-number">10+</div>
+        <div class="hero-stat-label">Años exp.</div>
+      </div>
+    </div>
+    <div class="hero-scroll">
+      <span>Explorar</span>
+      <div class="hero-scroll-line"></div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       CATÁLOGO
+  ============================================================ -->
+  <section class="catalog-section" id="catalogo">
+    <div class="section" style="padding-top:80px; padding-bottom:80px;">
+      <div class="section-header">
+        <div class="section-eyebrow">Catálogo</div>
+        <h2 class="section-title">Propiedades en <em>Morelia</em></h2>
+        <p class="section-subtitle">Explora nuestras opciones por colonia, tipo y precio</p>
+      </div>
+
+      <!-- Filtros -->
+      <div class="filters-wrapper">
+        <div class="filters-title">Filtrar por Colonia</div>
+        <div class="filters-colonias" id="filtrosColonias">
+          <button class="filter-chip active" data-colonia="todas">Todas las Colonias</button>
+          <!-- Se llenan dinámicamente -->
+        </div>
+        <div class="filters-row">
+          <select class="filter-select" id="filterTipo">
+            <option value="">Tipo de propiedad</option>
+            <option value="casa">🏠 Casa</option>
+            <option value="departamento">🏢 Departamento</option>
+            <option value="terreno">🌿 Terreno</option>
+            <option value="local">🏪 Local Comercial</option>
+            <option value="bodega">🏭 Bodega</option>
+          </select>
+          <select class="filter-select" id="filterEstado">
+            <option value="">Estado</option>
+            <option value="disponible">✅ Disponibles</option>
+            <option value="en_proceso">⏳ En proceso</option>
+            <option value="vendida">🔒 Vendidas</option>
+          </select>
+          <select class="filter-select" id="filterCredito">
+            <option value="">Crédito</option>
+            <option value="true">✅ Acepta crédito</option>
+          </select>
+          <input class="filter-search" type="search" id="filterSearch" placeholder="🔍 Buscar por nombre o dirección..." />
+        </div>
+      </div>
+
+      <div class="properties-count" id="propertiesCount"></div>
+      <div class="properties-grid" id="propertiesGrid">
+        <!-- Skeleton mientras carga -->
+        <div class="skeleton-card"><div class="skeleton skeleton-image"></div><div class="skeleton-body"><div class="skeleton skeleton-line medium"></div><div class="skeleton skeleton-line short"></div><div class="skeleton skeleton-line"></div></div></div>
+        <div class="skeleton-card"><div class="skeleton skeleton-image"></div><div class="skeleton-body"><div class="skeleton skeleton-line medium"></div><div class="skeleton skeleton-line short"></div><div class="skeleton skeleton-line"></div></div></div>
+        <div class="skeleton-card"><div class="skeleton skeleton-image"></div><div class="skeleton-body"><div class="skeleton skeleton-line medium"></div><div class="skeleton skeleton-line short"></div><div class="skeleton skeleton-line"></div></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       SECCIÓN ASESORA
+  ============================================================ -->
+  <section class="agent-section" id="asesora">
+    <div class="agent-inner">
+      <div class="agent-photo-wrapper">
+        <div class="agent-photo-placeholder" id="agentPhotoWrapper">👩‍💼</div>
+        <div class="agent-badge">
+          <div class="agent-badge-num">+10</div>
+          <div class="agent-badge-text">Años de<br>Experiencia</div>
+        </div>
+      </div>
+      <div class="agent-content">
+        <div class="agent-eyebrow">Tu Asesora de Confianza</div>
+        <h2 class="agent-name" id="agentNameSection">Patricia González</h2>
+        <div class="agent-title-text" id="agentTitleSection">Asesora Inmobiliaria Certificada • Morelia, Mich.</div>
+        <p class="agent-description">
+          Con más de 10 años en el mercado inmobiliario de Morelia, te ayudo a encontrar la 
+          propiedad que se adapte a tus necesidades y presupuesto. Te acompaño desde la 
+          primera visita hasta la firma de escrituras, explicándote cada paso con claridad.
+        </p>
+        <div class="agent-features">
+          <div class="agent-feature">
+            <div class="agent-feature-icon">📋</div>
+            <span>Verificación de situación jurídica de propiedades</span>
+          </div>
+          <div class="agent-feature">
+            <div class="agent-feature-icon">🏦</div>
+            <span>Orientación en créditos hipotecarios (Infonavit, Fovissste, bancario)</span>
+          </div>
+          <div class="agent-feature">
+            <div class="agent-feature-icon">📍</div>
+            <span>Amplio conocimiento de colonias en Morelia</span>
+          </div>
+          <div class="agent-feature">
+            <div class="agent-feature-icon">📝</div>
+            <span>Acompañamiento completo en trámites y escrituración</span>
+          </div>
+        </div>
+        <a id="agentWhatsapp" href="#" class="btn-whatsapp">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          Escríbeme por WhatsApp
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       CÓMO FUNCIONA
+  ============================================================ -->
+  <section class="how-section" id="como-funciona">
+    <div class="section">
+      <div class="section-header">
+        <div class="section-eyebrow">Proceso</div>
+        <h2 class="section-title">¿Cómo <em>funciona</em>?</h2>
+        <p class="section-subtitle">Comprar una propiedad es sencillo cuando tienes a alguien de confianza</p>
+      </div>
+      <div class="how-steps">
+        <div class="how-step">
+          <div class="step-number">01</div>
+          <div class="step-icon-bg">🔍</div>
+          <div class="step-title">Elige tu propiedad</div>
+          <div class="step-desc">Explora el catálogo, filtra por colonia, precio o tipo. Encuentra la que más te guste.</div>
+        </div>
+        <div class="how-step">
+          <div class="step-number">02</div>
+          <div class="step-icon-bg">💬</div>
+          <div class="step-title">Contáctame por WhatsApp</div>
+          <div class="step-desc">Escríbeme directamente. Te resuelvo dudas sobre crédito, situación legal y más.</div>
+        </div>
+        <div class="how-step">
+          <div class="step-number">03</div>
+          <div class="step-icon-bg">🏠</div>
+          <div class="step-title">Agenda tu visita</div>
+          <div class="step-desc">Coordinamos la cita para que conozcas la propiedad personalmente y sin compromiso.</div>
+        </div>
+        <div class="how-step">
+          <div class="step-number">04</div>
+          <div class="step-icon-bg">📋</div>
+          <div class="step-title">Cerramos el trato</div>
+          <div class="step-desc">Si te decides, te acompaño en todo el proceso de escrituración hasta que tengas tus llaves.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       FOOTER
+  ============================================================ -->
+  <footer id="contacto">
+    <div class="footer-inner">
+      <div>
+        <div class="footer-brand-name" id="footerName">Patricia González</div>
+        <div class="footer-brand-tag">Asesora Inmobiliaria · Morelia, Mich.</div>
+        <p class="footer-desc">
+          Tu aliada en el mercado inmobiliario de Morelia. 
+          Con experiencia, honestidad y dedicación para ayudarte a encontrar tu hogar ideal.
+        </p>
+      </div>
+      <div>
+        <div class="footer-heading">Explorar</div>
+        <ul class="footer-links">
+          <li><a href="#catalogo">Catálogo</a></li>
+          <li><a href="#asesora">Asesora</a></li>
+          <li><a href="#como-funciona">¿Cómo funciona?</a></li>
+          <li><a href="admin/login.html" style="opacity:0.4;font-size:0.75rem;">Admin</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="footer-heading">Contacto</div>
+        <div class="footer-contact">
+          <div class="footer-contact-item">📍 Morelia, Michoacán, México</div>
+          <div class="footer-contact-item" id="footerPhone">📱 443-123-4567</div>
+          <div class="footer-contact-item">🕐 Lun–Sáb 9am–7pm</div>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2024 · Todos los derechos reservados</span>
+    </div>
+  </footer>
+
+  <!-- ============================================================
+       FLOATING WHATSAPP BUTTON
+  ============================================================ -->
+  <a class="fab-whatsapp" id="fabWhatsapp" href="#" title="Chatear por WhatsApp">
+    <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+  </a>
+
+  <!-- Scripts -->
+  <script src="js/config.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

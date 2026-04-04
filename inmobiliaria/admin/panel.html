@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Panel — Mis Propiedades</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="../css/main.css"/>
+  <style>
+    body { background: var(--cream); }
+
+    /* ADMIN HEADER */
+    .admin-header {
+      background: var(--green-deep);
+      color: white;
+      padding: 0 32px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: var(--shadow-md);
+    }
+    .admin-logo {
+      font-family: var(--font-display);
+      font-size: 1.3rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .admin-user {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.8);
+    }
+    .btn-logout {
+      background: rgba(255,255,255,0.12);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 50px;
+      font-size: 0.8rem;
+      border: 1px solid rgba(255,255,255,0.2);
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+    .btn-logout:hover { background: rgba(255,255,255,0.22); }
+    .admin-view-site {
+      color: var(--gold-light);
+      font-size: 0.8rem;
+    }
+
+    /* LAYOUT */
+    .admin-body {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 36px 24px;
+    }
+    .admin-top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .admin-title {
+      font-family: var(--font-display);
+      font-size: 1.8rem;
+      color: var(--green-deep);
+    }
+    .btn-add {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--green-deep);
+      color: white;
+      padding: 12px 24px;
+      border-radius: var(--radius);
+      font-size: 0.9rem;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+    .btn-add:hover { background: var(--green-mid); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+
+    /* STATS ROW */
+    .admin-stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .stat-card {
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      padding: 20px 24px;
+      border: 1px solid var(--cream-dark);
+    }
+    .stat-card-num {
+      font-family: var(--font-display);
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--green-deep);
+    }
+    .stat-card-label { font-size: 0.78rem; color: var(--gray); text-transform: uppercase; letter-spacing: 0.08em; }
+
+    /* PROPERTY LIST */
+    .admin-search {
+      width: 100%;
+      padding: 11px 16px;
+      border: 1.5px solid var(--gray-light);
+      border-radius: var(--radius);
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      margin-bottom: 16px;
+      outline: none;
+    }
+    .admin-search:focus { border-color: var(--green-mid); }
+    .property-list { display: flex; flex-direction: column; gap: 12px; }
+    .admin-prop-row {
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      padding: 16px 20px;
+      display: grid;
+      grid-template-columns: 80px 1fr auto;
+      gap: 16px;
+      align-items: center;
+      border: 1px solid var(--cream-dark);
+      transition: box-shadow var(--transition);
+    }
+    .admin-prop-row:hover { box-shadow: var(--shadow-sm); }
+    .admin-prop-thumb {
+      width: 80px; height: 60px;
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: var(--green-pale);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.6rem;
+      flex-shrink: 0;
+    }
+    .admin-prop-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .admin-prop-info {}
+    .admin-prop-title { font-weight: 600; color: var(--green-deep); margin-bottom: 4px; }
+    .admin-prop-meta { font-size: 0.8rem; color: var(--gray); display: flex; gap: 12px; flex-wrap: wrap; }
+    .admin-prop-actions { display: flex; gap: 8px; flex-shrink: 0; }
+    .btn-edit, .btn-delete, .btn-view {
+      padding: 7px 14px;
+      border-radius: var(--radius);
+      font-size: 0.8rem;
+      font-weight: 500;
+      border: none;
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+    .btn-edit   { background: var(--green-pale); color: var(--green-deep); }
+    .btn-edit:hover { background: var(--green-light); color: white; }
+    .btn-delete { background: #FEE2E2; color: #991B1B; }
+    .btn-delete:hover { background: #FCA5A5; }
+    .btn-view   { background: var(--cream-dark); color: var(--charcoal); }
+    .btn-view:hover { background: var(--gray-light); }
+
+    /* MODAL */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 720px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 36px;
+      position: relative;
+    }
+    .modal-close {
+      position: absolute;
+      top: 16px; right: 16px;
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: var(--cream);
+      border: none;
+      font-size: 1.1rem;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background var(--transition);
+    }
+    .modal-close:hover { background: var(--cream-dark); }
+    .modal-title {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      color: var(--green-deep);
+      margin-bottom: 24px;
+    }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-full { grid-column: 1 / -1; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-label { font-size: 0.82rem; font-weight: 600; color: var(--charcoal); }
+    .form-input, .form-select, .form-textarea {
+      padding: 11px 14px;
+      border: 1.5px solid var(--gray-light);
+      border-radius: var(--radius);
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      color: var(--charcoal);
+      outline: none;
+      transition: border-color var(--transition);
+      background: var(--white);
+    }
+    .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--green-mid); }
+    .form-textarea { min-height: 100px; resize: vertical; }
+    .form-checkbox-group {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+      padding: 12px 0;
+    }
+    .form-checkbox {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    .form-checkbox input { width: 18px; height: 18px; accent-color: var(--green-deep); cursor: pointer; }
+    .form-section-title {
+      font-family: var(--font-display);
+      font-size: 1rem;
+      color: var(--green-mid);
+      margin: 20px 0 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--cream-dark);
+      grid-column: 1 / -1;
+    }
+    .form-hint { font-size: 0.75rem; color: var(--gray); }
+
+    /* Image upload */
+    .img-upload-area {
+      border: 2px dashed var(--gray-light);
+      border-radius: var(--radius);
+      padding: 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: all var(--transition);
+      background: var(--cream);
+      grid-column: 1 / -1;
+    }
+    .img-upload-area:hover { border-color: var(--green-mid); background: var(--green-pale); }
+    .img-upload-area input { display: none; }
+    .img-preview-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+      gap: 8px;
+      margin-top: 12px;
+      grid-column: 1 / -1;
+    }
+    .img-preview-item {
+      position: relative;
+      aspect-ratio: 1;
+      border-radius: var(--radius);
+      overflow: hidden;
+      border: 2px solid var(--cream-dark);
+    }
+    .img-preview-item img { width: 100%; height: 100%; object-fit: cover; }
+    .img-preview-item.cover { border-color: var(--gold); }
+    .img-remove-btn {
+      position: absolute;
+      top: 4px; right: 4px;
+      background: rgba(0,0,0,0.6);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 22px; height: 22px;
+      font-size: 0.7rem;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .img-cover-label {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      background: rgba(201,168,76,0.85);
+      color: white;
+      font-size: 0.6rem;
+      text-align: center;
+      padding: 2px;
+      font-weight: 700;
+    }
+
+    /* Modal footer */
+    .modal-footer {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+      margin-top: 28px;
+      padding-top: 20px;
+      border-top: 1px solid var(--cream-dark);
+    }
+    .btn-cancel {
+      padding: 12px 24px;
+      border-radius: var(--radius);
+      background: var(--cream);
+      color: var(--charcoal);
+      border: 1.5px solid var(--cream-dark);
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all var(--transition);
+    }
+    .btn-cancel:hover { background: var(--cream-dark); }
+    .btn-save {
+      padding: 12px 28px;
+      border-radius: var(--radius);
+      background: var(--green-deep);
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 600;
+      transition: all var(--transition);
+    }
+    .btn-save:hover { background: var(--green-mid); }
+    .btn-save:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px; left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--charcoal);
+      color: white;
+      padding: 14px 24px;
+      border-radius: var(--radius);
+      font-size: 0.9rem;
+      z-index: 500;
+      transition: transform 0.3s ease;
+      white-space: nowrap;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .toast.success { background: var(--green-mid); }
+    .toast.error   { background: #DC2626; }
+
+    /* Loading */
+    .admin-loading {
+      text-align: center;
+      padding: 60px;
+      color: var(--gray);
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+    }
+
+    @media (max-width: 700px) {
+      .admin-stats { grid-template-columns: 1fr 1fr; }
+      .form-grid { grid-template-columns: 1fr; }
+      .admin-prop-row { grid-template-columns: 60px 1fr; }
+      .admin-prop-actions { grid-column: 1 / -1; }
+      .modal { padding: 24px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ADMIN HEADER -->
+  <div class="admin-header">
+    <div class="admin-logo">🏡 Panel de Propiedades</div>
+    <div class="admin-user">
+      <a href="../index.html" class="admin-view-site">Ver sitio →</a>
+      <span id="adminEmail"></span>
+      <button class="btn-logout" onclick="logout()">Salir</button>
+    </div>
+  </div>
+
+  <div class="admin-body">
+    <!-- TOP BAR -->
+    <div class="admin-top-bar">
+      <h1 class="admin-title">Mis Propiedades</h1>
+      <button class="btn-add" onclick="openModal()">➕ Agregar Propiedad</button>
+    </div>
+
+    <!-- STATS -->
+    <div class="admin-stats" id="adminStats">
+      <div class="stat-card"><div class="stat-card-num" id="stTotal">—</div><div class="stat-card-label">Total</div></div>
+      <div class="stat-card"><div class="stat-card-num" id="stDisp">—</div><div class="stat-card-label">Disponibles</div></div>
+      <div class="stat-card"><div class="stat-card-num" id="stProc">—</div><div class="stat-card-label">En proceso</div></div>
+      <div class="stat-card"><div class="stat-card-num" id="stVend">—</div><div class="stat-card-label">Vendidas</div></div>
+    </div>
+
+    <!-- SEARCH & LIST -->
+    <input class="admin-search" type="search" id="adminSearch" placeholder="🔍 Buscar propiedad..." oninput="filterAdmin()" />
+    <div class="property-list" id="adminList">
+      <div class="admin-loading">⏳ Cargando propiedades...</div>
+    </div>
+  </div>
+
+  <!-- MODAL AGREGAR / EDITAR -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <button class="modal-close" onclick="closeModal()">✕</button>
+      <div class="modal-title" id="modalTitle">Agregar Propiedad</div>
+      <input type="hidden" id="editId"/>
+
+      <div class="form-grid">
+        <!-- Información básica -->
+        <div class="form-section-title">📋 Información Básica</div>
+        
+        <div class="form-group form-full">
+          <label class="form-label">Nombre / Título de la propiedad *</label>
+          <input class="form-input" type="text" id="fTitle" placeholder="Ej: Casa en Jardines de Catedral"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tipo de propiedad *</label>
+          <select class="form-select" id="fType">
+            <option value="casa">🏠 Casa</option>
+            <option value="departamento">🏢 Departamento</option>
+            <option value="terreno">🌿 Terreno</option>
+            <option value="local">🏪 Local Comercial</option>
+            <option value="bodega">🏭 Bodega</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Estado *</label>
+          <select class="form-select" id="fStatus">
+            <option value="disponible">✅ Disponible</option>
+            <option value="en_proceso">⏳ En proceso</option>
+            <option value="vendida">🔒 Vendida</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Colonia *</label>
+          <input class="form-input" type="text" id="fColonia" placeholder="Ej: Chapultepec" list="coloniasDatalist"/>
+          <datalist id="coloniasDatalist"></datalist>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Precio (MXN) *</label>
+          <input class="form-input" type="number" id="fPrice" placeholder="1500000" min="0"/>
+        </div>
+        <div class="form-group form-full">
+          <label class="form-label">Dirección</label>
+          <input class="form-input" type="text" id="fAddress" placeholder="Ej: Calle Magnolia 45"/>
+        </div>
+        <div class="form-group form-full">
+          <label class="form-label">Descripción</label>
+          <textarea class="form-textarea" id="fDescription" placeholder="Describe la propiedad: características, entorno, ventajas..."></textarea>
+        </div>
+
+        <!-- Características -->
+        <div class="form-section-title">🏠 Características</div>
+        
+        <div class="form-group">
+          <label class="form-label">Recámaras</label>
+          <input class="form-input" type="number" id="fBedrooms" placeholder="3" min="0"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Baños</label>
+          <input class="form-input" type="number" id="fBathrooms" placeholder="2" min="0"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Superficie (m²)</label>
+          <input class="form-input" type="number" id="fArea" placeholder="150" min="0"/>
+        </div>
+        <div class="form-group">
+          <div class="form-label">Opciones</div>
+          <div class="form-checkbox-group">
+            <label class="form-checkbox">
+              <input type="checkbox" id="fCredit"/> ✅ Acepta crédito hipotecario
+            </label>
+            <label class="form-checkbox">
+              <input type="checkbox" id="fLegal"/> ⚠️ Tiene situación jurídica
+            </label>
+          </div>
+        </div>
+
+        <!-- Ubicación -->
+        <div class="form-section-title">📍 Ubicación en el Mapa</div>
+        
+        <div class="form-group">
+          <label class="form-label">Latitud</label>
+          <input class="form-input" type="number" id="fLat" step="any" placeholder="19.7060"/>
+          <span class="form-hint">Puedes obtener esto en Google Maps haciendo clic derecho en el lugar</span>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Longitud</label>
+          <input class="form-input" type="number" id="fLng" step="any" placeholder="-101.1950"/>
+        </div>
+
+        <!-- Multimedia -->
+        <div class="form-section-title">📸 Fotos y Video</div>
+        
+        <div class="form-group form-full">
+          <label class="form-label">URL de video (YouTube o Facebook)</label>
+          <input class="form-input" type="url" id="fVideo" placeholder="https://www.youtube.com/watch?v=..."/>
+          <span class="form-hint">Pega el link del video de YouTube o Facebook</span>
+        </div>
+        
+        <!-- Subir imágenes -->
+        <div class="img-upload-area form-full" onclick="document.getElementById('imgFileInput').click()">
+          <input type="file" id="imgFileInput" accept="image/*" multiple onchange="handleImageUpload(this)"/>
+          <div style="font-size:2rem;margin-bottom:8px;">📷</div>
+          <div style="font-weight:600;color:var(--green-deep);">Haz clic para agregar fotos</div>
+          <div style="font-size:0.8rem;color:var(--gray);margin-top:4px;">Puedes subir varias fotos a la vez. La primera será la portada.</div>
+        </div>
+        <div class="img-preview-grid" id="imgPreviewGrid"></div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+        <button class="btn-save" id="saveBtn" onclick="saveProperty()">💾 Guardar Propiedad</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script src="../js/config.js"></script>
+  <script>
+    let allAdminProps = [];
+    let pendingImages = []; // { file, url, isExisting }
+    let existingImages = [];
+
+    // ---- Auth check ----
+    async function checkAuth() {
+      const { data } = await sb.auth.getSession();
+      if (!data.session) {
+        location.href = 'login.html';
+        return;
+      }
+      document.getElementById('adminEmail').textContent = data.session.user.email;
+      loadAdminProperties();
+    }
+
+    async function logout() {
+      await sb.auth.signOut();
+      location.href = 'login.html';
+    }
+
+    // ---- Load properties ----
+    async function loadAdminProperties() {
+      const { data, error } = await sb
+        .from('properties')
+        .select('*, property_images(url, is_cover, order_index)')
+        .order('created_at', { ascending: false });
+
+      if (error) { showToast('Error cargando propiedades', 'error'); return; }
+      allAdminProps = data || [];
+      updateStats(data);
+      renderAdminList(data);
+      populateColonias(data);
+    }
+
+    function updateStats(props) {
+      document.getElementById('stTotal').textContent = props.length;
+      document.getElementById('stDisp').textContent = props.filter(p => p.status === 'disponible').length;
+      document.getElementById('stProc').textContent = props.filter(p => p.status === 'en_proceso').length;
+      document.getElementById('stVend').textContent = props.filter(p => p.status === 'vendida').length;
+    }
+
+    function populateColonias(props) {
+      const colonias = [...new Set(props.map(p => p.colonia).filter(Boolean))].sort();
+      const dl = document.getElementById('coloniasDatalist');
+      dl.innerHTML = colonias.map(c => `<option value="${c}"></option>`).join('');
+    }
+
+    function renderAdminList(props) {
+      const list = document.getElementById('adminList');
+      if (!props.length) {
+        list.innerHTML = `<div class="admin-loading">No hay propiedades aún. ¡Agrega la primera!</div>`;
+        return;
+      }
+      list.innerHTML = props.map(p => {
+        const cover = p.property_images?.find(i => i.is_cover) || p.property_images?.[0];
+        const status = statusLabel(p.status);
+        return `
+          <div class="admin-prop-row">
+            <div class="admin-prop-thumb">
+              ${cover ? `<img src="${cover.url}" alt="${p.title}"/>` : typeEmojiStr(p.property_type)}
+            </div>
+            <div class="admin-prop-info">
+              <div class="admin-prop-title">${p.title}</div>
+              <div class="admin-prop-meta">
+                <span>${propertyTypeLabel(p.property_type)}</span>
+                <span>📍 ${p.colonia}</span>
+                <span>${formatPrice(p.price)}</span>
+                <span class="card-status ${status.class}" style="padding:2px 8px;">${status.text}</span>
+              </div>
+            </div>
+            <div class="admin-prop-actions">
+              <button class="btn-view" onclick="window.open('../propiedad.html?id=${p.id}','_blank')">👁 Ver</button>
+              <button class="btn-edit" onclick="editProperty('${p.id}')">✏️ Editar</button>
+              <button class="btn-delete" onclick="deleteProperty('${p.id}','${p.title.replace(/'/g,"\\'")}')">🗑</button>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    function filterAdmin() {
+      const q = document.getElementById('adminSearch').value.toLowerCase();
+      const filtered = allAdminProps.filter(p =>
+        p.title.toLowerCase().includes(q) ||
+        (p.colonia || '').toLowerCase().includes(q)
+      );
+      renderAdminList(filtered);
+    }
+
+    // ---- MODAL ----
+    function openModal(prop = null) {
+      pendingImages = [];
+      existingImages = [];
+      clearForm();
+
+      if (prop) {
+        document.getElementById('modalTitle').textContent = '✏️ Editar Propiedad';
+        document.getElementById('editId').value = prop.id;
+        document.getElementById('fTitle').value      = prop.title || '';
+        document.getElementById('fType').value       = prop.property_type || 'casa';
+        document.getElementById('fStatus').value     = prop.status || 'disponible';
+        document.getElementById('fColonia').value    = prop.colonia || '';
+        document.getElementById('fPrice').value      = prop.price || '';
+        document.getElementById('fAddress').value    = prop.address || '';
+        document.getElementById('fDescription').value = prop.description || '';
+        document.getElementById('fBedrooms').value   = prop.bedrooms || '';
+        document.getElementById('fBathrooms').value  = prop.bathrooms || '';
+        document.getElementById('fArea').value       = prop.area_m2 || '';
+        document.getElementById('fCredit').checked   = !!prop.has_credit;
+        document.getElementById('fLegal').checked    = !!prop.has_legal_issues;
+        document.getElementById('fLat').value        = prop.latitude || '';
+        document.getElementById('fLng').value        = prop.longitude || '';
+        document.getElementById('fVideo').value      = prop.video_url || '';
+
+        // Load existing images
+        existingImages = (prop.property_images || []).map(img => ({ ...img, isExisting: true }));
+        renderImagePreviews();
+      } else {
+        document.getElementById('modalTitle').textContent = '➕ Agregar Propiedad';
+        document.getElementById('editId').value = '';
+      }
+
+      document.getElementById('modalOverlay').classList.add('open');
+    }
+
+    function closeModal() {
+      document.getElementById('modalOverlay').classList.remove('open');
+      pendingImages = [];
+      existingImages = [];
+    }
+
+    function clearForm() {
+      ['fTitle','fColonia','fPrice','fAddress','fDescription','fBedrooms','fBathrooms','fArea','fLat','fLng','fVideo','editId']
+        .forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+      document.getElementById('fType').value = 'casa';
+      document.getElementById('fStatus').value = 'disponible';
+      document.getElementById('fCredit').checked = false;
+      document.getElementById('fLegal').checked = false;
+      document.getElementById('imgPreviewGrid').innerHTML = '';
+    }
+
+    function editProperty(id) {
+      const prop = allAdminProps.find(p => p.id === id);
+      if (prop) openModal(prop);
+    }
+
+    // ---- Image handling ----
+    function handleImageUpload(input) {
+      const files = Array.from(input.files);
+      files.forEach(file => {
+        const url = URL.createObjectURL(file);
+        pendingImages.push({ file, url, isExisting: false });
+      });
+      renderImagePreviews();
+      input.value = '';
+    }
+
+    function renderImagePreviews() {
+      const grid = document.getElementById('imgPreviewGrid');
+      const allImgs = [...existingImages, ...pendingImages];
+      if (!allImgs.length) { grid.innerHTML = ''; return; }
+
+      grid.innerHTML = allImgs.map((img, i) => `
+        <div class="img-preview-item ${i === 0 ? 'cover' : ''}">
+          <img src="${img.url}" alt="Foto ${i+1}"/>
+          <button class="img-remove-btn" onclick="removeImage(${i})">✕</button>
+          ${i === 0 ? '<div class="img-cover-label">PORTADA</div>' : ''}
+        </div>
+      `).join('');
+    }
+
+    function removeImage(index) {
+      const allImgs = [...existingImages, ...pendingImages];
+      const removed = allImgs[index];
+      if (removed.isExisting) {
+        existingImages = existingImages.filter((_, i) => i !== index);
+      } else {
+        const pendingIndex = index - existingImages.length;
+        pendingImages = pendingImages.filter((_, i) => i !== pendingIndex);
+      }
+      renderImagePreviews();
+    }
+
+    // ---- Save property ----
+    async function saveProperty() {
+      const btn = document.getElementById('saveBtn');
+      const title = document.getElementById('fTitle').value.trim();
+      const colonia = document.getElementById('fColonia').value.trim();
+      const price = document.getElementById('fPrice').value;
+
+      if (!title || !colonia || !price) {
+        showToast('⚠️ Llena los campos requeridos: Título, Colonia y Precio', 'error');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = '⏳ Guardando...';
+
+      const payload = {
+        title,
+        colonia,
+        price: parseFloat(price),
+        property_type: document.getElementById('fType').value,
+        status: document.getElementById('fStatus').value,
+        address: document.getElementById('fAddress').value.trim() || null,
+        description: document.getElementById('fDescription').value.trim() || null,
+        bedrooms: parseInt(document.getElementById('fBedrooms').value) || null,
+        bathrooms: parseInt(document.getElementById('fBathrooms').value) || null,
+        area_m2: parseFloat(document.getElementById('fArea').value) || null,
+        has_credit: document.getElementById('fCredit').checked,
+        has_legal_issues: document.getElementById('fLegal').checked,
+        latitude: parseFloat(document.getElementById('fLat').value) || null,
+        longitude: parseFloat(document.getElementById('fLng').value) || null,
+        video_url: document.getElementById('fVideo').value.trim() || null,
+        updated_at: new Date().toISOString()
+      };
+
+      try {
+        const editId = document.getElementById('editId').value;
+        let propertyId;
+
+        if (editId) {
+          const { error } = await sb.from('properties').update(payload).eq('id', editId);
+          if (error) throw error;
+          propertyId = editId;
+          // Delete removed existing images
+          await sb.from('property_images').delete().eq('property_id', propertyId)
+            .not('url', 'in', `(${existingImages.map(i => `"${i.url}"`).join(',')})`);
+        } else {
+          const { data, error } = await sb.from('properties').insert(payload).select().single();
+          if (error) throw error;
+          propertyId = data.id;
+        }
+
+        // Upload new images
+        for (let i = 0; i < pendingImages.length; i++) {
+          const img = pendingImages[i];
+          const ext = img.file.name.split('.').pop();
+          const path = `${propertyId}/${Date.now()}_${i}.${ext}`;
+          
+          const { error: upErr } = await sb.storage.from('property-images').upload(path, img.file);
+          if (upErr) { console.error('Error subiendo imagen:', upErr); continue; }
+          
+          const { data: urlData } = sb.storage.from('property-images').getPublicUrl(path);
+          const isCover = existingImages.length === 0 && i === 0;
+          
+          await sb.from('property_images').insert({
+            property_id: propertyId,
+            url: urlData.publicUrl,
+            is_cover: isCover,
+            order_index: existingImages.length + i
+          });
+        }
+
+        showToast('✅ Propiedad guardada exitosamente', 'success');
+        closeModal();
+        loadAdminProperties();
+      } catch (err) {
+        console.error(err);
+        showToast('❌ Error al guardar. Intenta de nuevo.', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '💾 Guardar Propiedad';
+      }
+    }
+
+    // ---- Delete property ----
+    async function deleteProperty(id, title) {
+      if (!confirm(`¿Segura que quieres eliminar:\n"${title}"?\n\nEsta acción no se puede deshacer.`)) return;
+      
+      const { error } = await sb.from('properties').delete().eq('id', id);
+      if (error) { showToast('Error al eliminar', 'error'); return; }
+      
+      // Delete images from storage
+      const { data: imgs } = await sb.from('property_images').select('url').eq('property_id', id);
+      if (imgs?.length) {
+        const paths = imgs.map(img => img.url.split('/property-images/')[1]).filter(Boolean);
+        if (paths.length) await sb.storage.from('property-images').remove(paths);
+      }
+
+      showToast('🗑 Propiedad eliminada', 'success');
+      loadAdminProperties();
+    }
+
+    // ---- Toast ----
+    function showToast(msg, type = '') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = `toast ${type} show`;
+      setTimeout(() => t.classList.remove('show'), 3500);
+    }
+
+    function typeEmojiStr(type) {
+      const e = { casa:'🏠', departamento:'🏢', terreno:'🌿', local:'🏪', bodega:'🏭' };
+      return e[type] || '🏡';
+    }
+
+    // Close modal on overlay click
+    document.getElementById('modalOverlay').addEventListener('click', e => {
+      if (e.target === e.currentTarget) closeModal();
+    });
+
+    checkAuth();
+  </script>
+</body>
+</html>

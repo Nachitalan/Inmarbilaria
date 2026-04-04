@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Propiedad — Asesora Inmobiliaria Morelia</title>
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Leaflet (mapa gratuito) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- Estilos -->
+  <link rel="stylesheet" href="css/main.css" />
+
+  <style>
+    .detail-hero {
+      padding-top: 72px;
+      background: var(--green-deep);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    /* Gallery */
+    .gallery-main {
+      position: relative;
+      flex: 1;
+      max-height: 65vh;
+      overflow: hidden;
+      background: #000;
+    }
+    .gallery-main img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      transition: opacity 0.4s ease;
+    }
+    .gallery-main-placeholder {
+      width: 100%; height: 100%;
+      min-height: 300px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 5rem;
+      background: linear-gradient(135deg, var(--green-deep), var(--green-mid));
+    }
+    .gallery-arrow {
+      position: absolute;
+      top: 50%; transform: translateY(-50%);
+      width: 48px; height: 48px;
+      background: rgba(27,67,50,0.7);
+      backdrop-filter: blur(8px);
+      border-radius: 50%;
+      border: none;
+      color: white;
+      font-size: 1.2rem;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      transition: all var(--transition);
+      z-index: 5;
+    }
+    .gallery-arrow:hover { background: var(--green-deep); transform: translateY(-50%) scale(1.1); }
+    .gallery-arrow.left  { left: 16px; }
+    .gallery-arrow.right { right: 16px; }
+    .gallery-counter {
+      position: absolute;
+      bottom: 16px; right: 16px;
+      background: rgba(0,0,0,0.5);
+      color: white;
+      padding: 5px 12px;
+      border-radius: 50px;
+      font-size: 0.8rem;
+      backdrop-filter: blur(4px);
+    }
+    .gallery-thumbs {
+      display: flex;
+      gap: 8px;
+      padding: 12px 24px;
+      background: var(--green-deep);
+      overflow-x: auto;
+    }
+    .gallery-thumb {
+      width: 72px; height: 52px;
+      border-radius: 8px;
+      overflow: hidden;
+      flex-shrink: 0;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: border-color var(--transition);
+    }
+    .gallery-thumb.active { border-color: var(--gold); }
+    .gallery-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+    /* Detail body */
+    .detail-body {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 60px 48px;
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 48px;
+      align-items: start;
+    }
+    .detail-breadcrumb {
+      font-size: 0.8rem;
+      color: var(--gray);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 20px;
+    }
+    .detail-breadcrumb a { color: var(--green-mid); }
+    .detail-status-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .detail-colonia {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--green-pale);
+      color: var(--green-deep);
+      padding: 5px 14px;
+      border-radius: 50px;
+      font-size: 0.78rem;
+      font-weight: 500;
+    }
+    .detail-title {
+      font-family: var(--font-display);
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      font-weight: 400;
+      color: var(--green-deep);
+      line-height: 1.2;
+      margin-bottom: 12px;
+    }
+    .detail-address {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--gray);
+      font-size: 0.9rem;
+      margin-bottom: 28px;
+    }
+    .detail-features {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      padding: 24px;
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      margin-bottom: 28px;
+      border: 1px solid var(--cream-dark);
+    }
+    .detail-feature {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      min-width: 80px;
+      flex: 1;
+    }
+    .detail-feature-icon { font-size: 1.6rem; }
+    .detail-feature-value {
+      font-family: var(--font-display);
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--green-deep);
+    }
+    .detail-feature-label { font-size: 0.7rem; color: var(--gray); text-transform: uppercase; letter-spacing: 0.08em; }
+    
+    .detail-description {
+      font-size: 1rem;
+      color: var(--charcoal);
+      line-height: 1.8;
+      margin-bottom: 32px;
+    }
+    .detail-section-title {
+      font-family: var(--font-display);
+      font-size: 1.4rem;
+      color: var(--green-deep);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .detail-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 32px;
+    }
+    .detail-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: 50px;
+      font-size: 0.82rem;
+      font-weight: 500;
+    }
+    .badge-credit { background: #D1FAE5; color: #065F46; }
+    .badge-legal  { background: #FEE2E2; color: #991B1B; }
+    .badge-nolegal { background: #D1FAE5; color: #065F46; }
+    
+    /* Video */
+    .video-wrapper {
+      position: relative;
+      padding-bottom: 56.25%;
+      height: 0;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      margin-bottom: 32px;
+      background: var(--charcoal);
+    }
+    .video-wrapper iframe {
+      position: absolute; top: 0; left: 0;
+      width: 100%; height: 100%;
+    }
+
+    /* Map */
+    #propertyMap {
+      height: 300px;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      margin-bottom: 32px;
+    }
+
+    /* Sidebar */
+    .detail-sidebar {
+      position: sticky;
+      top: 92px;
+    }
+    .sidebar-card {
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      border: 1px solid var(--cream-dark);
+      box-shadow: var(--shadow-md);
+      margin-bottom: 16px;
+    }
+    .sidebar-price {
+      font-family: var(--font-display);
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--green-deep);
+      margin-bottom: 4px;
+    }
+    .sidebar-price-note {
+      font-size: 0.78rem;
+      color: var(--gray);
+      margin-bottom: 20px;
+    }
+    .sidebar-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      padding: 16px;
+      border-radius: var(--radius);
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 10px;
+      transition: all var(--transition);
+    }
+    .sidebar-btn-whatsapp {
+      background: #25D366;
+      color: white;
+    }
+    .sidebar-btn-whatsapp:hover { background: #20BD5A; transform: translateY(-2px); }
+    .sidebar-btn-secondary {
+      background: var(--cream);
+      color: var(--green-deep);
+      border: 1.5px solid var(--cream-dark);
+    }
+    .sidebar-btn-secondary:hover { background: var(--green-pale); }
+    .sidebar-info-list { display: flex; flex-direction: column; gap: 10px; }
+    .sidebar-info-item {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--cream-dark);
+    }
+    .sidebar-info-item:last-child { border: none; }
+    .sidebar-info-label { color: var(--gray); }
+    .sidebar-info-value { font-weight: 500; color: var(--green-deep); }
+
+    /* Loading */
+    .detail-loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 60vh;
+      color: var(--white);
+      gap: 16px;
+    }
+    .detail-loading-spinner {
+      width: 40px; height: 40px;
+      border: 3px solid rgba(255,255,255,0.2);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 860px) {
+      .detail-body { grid-template-columns: 1fr; padding: 32px 24px; }
+      .detail-sidebar { position: static; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar scrolled" style="position:fixed;">
+    <a href="index.html" class="nav-logo">
+      <span class="nav-logo-name">Patricia González</span>
+      <span class="nav-logo-tagline">Asesora Inmobiliaria · Morelia</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html#catalogo">← Regresar al catálogo</a></li>
+    </ul>
+  </nav>
+
+  <!-- Hero con galería -->
+  <div class="detail-hero" id="detailHero">
+    <div class="detail-loading" id="detailLoading">
+      <div class="detail-loading-spinner"></div>
+      <p>Cargando propiedad...</p>
+    </div>
+  </div>
+
+  <!-- Cuerpo del detalle -->
+  <div id="detailBody" style="display:none;">
+    <div class="detail-body">
+
+      <!-- Columna principal -->
+      <div class="detail-main">
+        <div class="detail-breadcrumb">
+          <a href="index.html">Inicio</a> / <a href="index.html#catalogo">Propiedades</a> / <span id="dColonia">—</span>
+        </div>
+        <div class="detail-status-row">
+          <span class="card-status" id="dStatus"></span>
+          <span class="detail-colonia">📍 <span id="dColoniaTag"></span></span>
+        </div>
+        <h1 class="detail-title" id="dTitle">—</h1>
+        <div class="detail-address" id="dAddress"></div>
+
+        <!-- Features -->
+        <div class="detail-features" id="dFeatures"></div>
+
+        <!-- Badges info -->
+        <div class="detail-badges" id="dBadges"></div>
+
+        <!-- Descripción -->
+        <div id="dDescSection">
+          <div class="detail-section-title">📝 Descripción</div>
+          <p class="detail-description" id="dDescription"></p>
+        </div>
+
+        <!-- Video -->
+        <div id="dVideoSection" style="display:none;">
+          <div class="detail-section-title">🎥 Video de la Propiedad</div>
+          <div class="video-wrapper">
+            <iframe id="dVideo" frameborder="0" allowfullscreen
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture">
+            </iframe>
+          </div>
+        </div>
+
+        <!-- Mapa -->
+        <div id="dMapSection" style="display:none;">
+          <div class="detail-section-title">🗺️ Ubicación</div>
+          <div id="propertyMap"></div>
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <div class="detail-sidebar">
+        <div class="sidebar-card">
+          <div class="sidebar-price" id="sPrice">—</div>
+          <div class="sidebar-price-note" id="sPriceNote"></div>
+          <a class="sidebar-btn sidebar-btn-whatsapp" id="sWhatsapp" href="#">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            Preguntar por WhatsApp
+          </a>
+          <a href="index.html#catalogo" class="sidebar-btn sidebar-btn-secondary">
+            ← Ver otras propiedades
+          </a>
+        </div>
+
+        <div class="sidebar-card">
+          <div style="font-size:0.75rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold);margin-bottom:16px;">Detalles</div>
+          <div class="sidebar-info-list" id="sInfoList"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating WhatsApp -->
+  <a class="fab-whatsapp" id="fabWhatsapp" href="#">
+    <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+  </a>
+
+  <script src="js/config.js"></script>
+  <script src="js/property.js"></script>
+</body>
+</html>
