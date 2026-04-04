@@ -10,7 +10,7 @@ const WHATSAPP_NUMBER = '524433960807'; // Numero de la asesora
 const WHATSAPP_MESSAGE = '¡Hola! Vi una propiedad en tu página y me gustaría más información';
 
 // Nombre de la asesora
-const AGENT_NAME = 'Patricia González';
+const AGENT_NAME = 'Marcela Silva';
 const AGENT_TITLE = 'Asesora Inmobiliaria Certificada';
 
 // ============================================================
