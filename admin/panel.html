@@ -456,7 +456,7 @@
 
         <!-- Características -->
         <div class="form-section-title">🏠 Características</div>
-        
+
         <div class="form-group">
           <label class="form-label">Recámaras</label>
           <input class="form-input" type="number" id="fBedrooms" placeholder="3" min="0"/>
@@ -469,11 +469,17 @@
           <label class="form-label">Superficie (m²)</label>
           <input class="form-input" type="number" id="fArea" placeholder="150" min="0"/>
         </div>
-        <div class="form-group">
-          <div class="form-label">Opciones</div>
+        <div class="form-group form-full">
+          <div class="form-label">Opciones de crédito y situación jurídica</div>
           <div class="form-checkbox-group">
             <label class="form-checkbox">
               <input type="checkbox" id="fCredit"/> ✅ Acepta crédito hipotecario
+            </label>
+            <label class="form-checkbox">
+              <input type="checkbox" id="fInfonavit"/> 🏦 Acepta Infonavit
+            </label>
+            <label class="form-checkbox">
+              <input type="checkbox" id="fFovissste"/> 🏛️ Acepta Fovissste
             </label>
             <label class="form-checkbox">
               <input type="checkbox" id="fLegal"/> ⚠️ Tiene situación jurídica
@@ -734,7 +740,9 @@
         bathrooms: parseInt(document.getElementById('fBathrooms').value) || null,
         area_m2: parseFloat(document.getElementById('fArea').value) || null,
         has_credit: document.getElementById('fCredit').checked,
-        has_legal_issues: document.getElementById('fLegal').checked,
+        has_infonavit: document.getElementById('fInfonavit').checked,
+        has_fovissste: document.getElementById('fFovissste').checked,
+        has_legal_issues: document.getElementById('fLegal').checked,        
         latitude: parseFloat(document.getElementById('fLat').value) || null,
         longitude: parseFloat(document.getElementById('fLng').value) || null,
         video_url: document.getElementById('fVideo').value.trim() || null,
