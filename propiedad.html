@@ -273,7 +273,9 @@
       if (p.has_credit)    tags.push(`<span class="tag tag-green">✅ Acepta crédito hipotecario</span>`);
       if (p.has_infonavit) tags.push(`<span class="tag tag-green">🏦 Acepta Infonavit</span>`);
       if (p.has_fovissste) tags.push(`<span class="tag tag-green">🏛️ Acepta Fovissste</span>`);
-      if (!p.has_credit && !p.has_infonavit && !p.has_fovissste) tags.push(`<span class="tag tag-yellow">💵 Solo contado</span>`);
+      if (p.has_bancario)  tags.push(`<span class="tag tag-green">🏦 Acepta crédito bancario</span>`);
+      if (p.has_pensiones) tags.push(`<span class="tag tag-green">📋 Acepta Pensiones Civiles</span>`);
+      if (!p.has_credit && !p.has_infonavit && !p.has_fovissste && !p.has_bancario && !p.has_pensiones) tags.push(`<span class="tag tag-yellow">💵 Solo contado</span>`);
       tags.push(p.has_legal_issues
         ? `<span class="tag tag-red">⚠️ Consultar situación jurídica</span>`
         : `<span class="tag tag-green">✅ Sin problemas jurídicos</span>`);
