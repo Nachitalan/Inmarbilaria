@@ -436,10 +436,13 @@
             <option value="vendida">🔒 Vendida</option>
           </select>
         </div>
-        <div class="form-group">
+        <div class="form-group" style="position:relative;">
           <label class="form-label">Colonia *</label>
-          <input class="form-input" type="text" id="fColonia" placeholder="Ej: Chapultepec" list="coloniasDatalist"/>
-          <datalist id="coloniasDatalist"></datalist>
+          <input class="form-input" type="text" id="fColoniaSearch" placeholder="🔍 Buscar colonia..." autocomplete="off" oninput="filterColoniasList()"/>
+          <input type="hidden" id="fColonia"/>
+          <div id="coloniasDropdown" style="display:none;position:absolute;z-index:50;background:#fff;border:1.5px solid var(--green-mid);border-radius:var(--radius);max-height:200px;overflow-y:auto;width:100%;box-shadow:var(--shadow-md);margin-top:2px;">
+          </div>
+          <span id="fColoniaSelected" style="font-size:0.75rem;color:var(--green-mid);margin-top:4px;display:none;"></span>
         </div>
         <div class="form-group">
           <label class="form-label">Precio (MXN) *</label>
@@ -562,7 +565,6 @@
       allAdminProps = data || [];
       updateStats(data);
       renderAdminList(data);
-      populateColonias(data);
     }
 
     function updateStats(props) {
@@ -570,12 +572,6 @@
       document.getElementById('stDisp').textContent = props.filter(p => p.status === 'disponible').length;
       document.getElementById('stProc').textContent = props.filter(p => p.status === 'en_proceso').length;
       document.getElementById('stVend').textContent = props.filter(p => p.status === 'vendida').length;
-    }
-
-    function populateColonias(props) {
-      const colonias = [...new Set(props.map(p => p.colonia).filter(Boolean))].sort();
-      const dl = document.getElementById('coloniasDatalist');
-      dl.innerHTML = colonias.map(c => `<option value="${c}"></option>`).join('');
     }
 
     function renderAdminList(props) {
@@ -639,7 +635,13 @@
         document.getElementById('fBathrooms').value  = prop.bathrooms || '';
         document.getElementById('fArea').value       = prop.area_m2 || '';
         document.getElementById('fCredit').checked   = !!prop.has_credit;
+        document.getElementById('fInfonavit').checked = !!prop.has_infonavit;
+        document.getElementById('fFovissste').checked = !!prop.has_fovissste;
         document.getElementById('fLegal').checked    = !!prop.has_legal_issues;
+        document.getElementById('fColoniaSearch').value = prop.colonia || '';
+        const selEl = document.getElementById('fColoniaSelected');
+        selEl.textContent = `✅ Colonia: ${prop.colonia}`;
+        selEl.style.display = 'block';
         document.getElementById('fLat').value        = prop.latitude || '';
         document.getElementById('fLng').value        = prop.longitude || '';
         document.getElementById('fVideo').value      = prop.video_url || '';
@@ -667,7 +669,12 @@
       document.getElementById('fType').value = 'casa';
       document.getElementById('fStatus').value = 'disponible';
       document.getElementById('fCredit').checked = false;
+      document.getElementById('fInfonavit').checked = false;
+      document.getElementById('fFovissste').checked = false;
       document.getElementById('fLegal').checked = false;
+      document.getElementById('fColoniaSearch').value = '';
+      document.getElementById('fColoniaSelected').style.display = 'none';
+      document.getElementById('coloniasDropdown').style.display = 'none';
       document.getElementById('imgPreviewGrid').innerHTML = '';
     }
 
@@ -834,7 +841,51 @@
       if (e.target === e.currentTarget) closeModal();
     });
 
+
+    // ---- Colonias searchable dropdown ----
+    let allColonias = [];
+
+    async function loadColonias() {
+      const { data } = await sb.from('colonias').select('name').order('name');
+      allColonias = data ? data.map(c => c.name) : [];
+    }
+
+    function filterColoniasList() {
+      const q = document.getElementById('fColoniaSearch').value.toLowerCase();
+      const dropdown = document.getElementById('coloniasDropdown');
+
+      if (!q) { dropdown.style.display = 'none'; return; }
+
+      const matches = allColonias.filter(c => c.toLowerCase().includes(q)).slice(0, 10);
+      if (!matches.length) { dropdown.style.display = 'none'; return; }
+
+      dropdown.innerHTML = matches.map(c => `
+      <div onclick="selectColonia('${c}')"
+        style="padding:10px 14px;cursor:pointer;font-size:0.875rem;color:var(--charcoal);transition:background 0.15s;"
+        onmouseover="this.style.background='var(--green-pale)'"
+        onmouseout="this.style.background='transparent'">
+        📍 ${c}
+      </div>`).join('');
+      dropdown.style.display = 'block';
+    }
+
+    function selectColonia(name) {
+      document.getElementById('fColonia').value = name;
+      document.getElementById('fColoniaSearch').value = name;
+      document.getElementById('coloniasDropdown').style.display = 'none';
+      const sel = document.getElementById('fColoniaSelected');
+      sel.textContent = `✅ Colonia seleccionada: ${name}`;
+      sel.style.display = 'block';
+    }
+
+    // Cerrar dropdown al hacer clic fuera
+    document.addEventListener('click', e => {
+      if (!e.target.closest('#fColoniaSearch') && !e.target.closest('#coloniasDropdown')) {
+      document.getElementById('coloniasDropdown').style.display = 'none';
+      }
+    });
     checkAuth();
+    loadColonias();
   </script>
 </body>
 </html>
